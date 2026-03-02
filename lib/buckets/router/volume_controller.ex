@@ -44,10 +44,9 @@ defmodule Buckets.Router.VolumeController do
     path = Path.join([bucket | path])
     File.mkdir_p!(Path.dirname(path))
 
-    conn
-    |> stream_body()
-    |> Stream.into(File.stream!(path))
-    |> Stream.run()
+    file = File.open!(path, [:write, :binary])
+    conn = stream_body_to_file(conn, file)
+    File.close(file)
 
     send_resp(conn, 200, "")
   end
@@ -74,17 +73,18 @@ defmodule Buckets.Router.VolumeController do
 
   ## Private
 
-  defp stream_body(conn) do
-    Stream.resource(
-      fn -> conn end,
-      fn conn ->
-        case Plug.Conn.read_body(conn) do
-          {:ok, "", conn} -> {:halt, conn}
-          {:ok, body, conn} -> {[body], conn}
-          {:more, binary, conn} -> {[binary], conn}
-        end
-      end,
-      fn _conn -> nil end
-    )
+  defp stream_body_to_file(conn, file) do
+    case Plug.Conn.read_body(conn) do
+      {:ok, "", conn} ->
+        conn
+
+      {:ok, body, conn} ->
+        IO.binwrite(file, body)
+        conn
+
+      {:more, chunk, conn} ->
+        IO.binwrite(file, chunk)
+        stream_body_to_file(conn, file)
+    end
   end
 end
