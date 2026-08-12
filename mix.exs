@@ -53,7 +53,7 @@ defmodule Buckets.MixProject do
       {:phoenix_live_view, ">= 0.20.0"},
       {:jason, "~> 1.4"},
       {:req, "~> 0.5"},
-      {:req_s3, "~> 0.2.5"},
+      {:req_s3, "~> 0.2"},
       {:jose, "~> 1.11"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
